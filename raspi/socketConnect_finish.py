@@ -4,6 +4,7 @@ import requests
 import RPi.GPIO as GPIO
 import picamera
 import time
+import timeit
 import socket
 import threading
 from multiprocessing import Process, Lock, Value
@@ -127,7 +128,7 @@ def captureProcess(lock, flag):
 
         if flag.value == 1:
             print("当前车辆是否可进入: 是")
-        else:
+        elif flag.value == 0:
             print("当前车辆是否可进入: 否")
 
         distance_1 = checkdist()
@@ -145,6 +146,11 @@ def captureProcess(lock, flag):
                 uuid_name = uuidfilename()
 
                 camera(uuid_name)
+                t = timeit.timeit(upload(uuid_name))
+
+                if t >= 5:
+                    print ("服务器未响应!")
+                    continue
                 # 当前图片内的车牌为数据库中存在的车牌信息
                 if upload(uuid_name) == 'success':
                     # TODO 获取进程锁
@@ -158,6 +164,9 @@ def captureProcess(lock, flag):
                     flag.value = 1
                     # 释放锁
                     lock.release()
+                    continue
+                else:
+                    print ("警告! 非授权用户进入")
                     continue
 
             # 当前距离有车牌且锁是打开状态 防止重复操作
