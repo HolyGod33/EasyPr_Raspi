@@ -144,13 +144,6 @@ def captureProcess(lock, flag):
             if (distance_3 <= 1.0) & (flag.value == 0):
                 # uuid文件名
                 uuid_name = uuidfilename()
-
-                camera(uuid_name)
-                t = timeit.timeit(upload(uuid_name))
-
-                if t >= 5:
-                    print ("服务器未响应!")
-                    continue
                 # 当前图片内的车牌为数据库中存在的车牌信息
                 if upload(uuid_name) == 'success':
                     # TODO 获取进程锁
@@ -218,21 +211,21 @@ def socketProcess(lock, flag):
             print (msg)
 
             if msg == '1':
-                if flag.value == 1:
+                if flag.value == 0:
                     # TODO 线程锁
                     lock.acquire()
                     clientsocket.send("{code: '1',msg: 'open'}".encode("gbk"))
-                    flag.value = 0
+                    flag.value = 1
                     clientsocket.close()
                     print("断开连接")
                     # 释放锁
                     lock.release()
             elif msg == '0':
-                if flag.value == 0:
+                if flag.value == 1:
                     # TODO 线程锁
                     lock.acquire()
                     clientsocket.send("{code: '0',msg: 'close'}".encode("gbk"))
-                    flag.value = 1
+                    flag.value = 0
                     clientsocket.close()
                     print("断开连接")
                     # 释放锁
